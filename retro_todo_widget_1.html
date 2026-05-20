@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Manager</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'MS Sans Serif', 'Tahoma', 'Pretendard', sans-serif;
+    background: transparent;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    font-size: 11px;
+  }
+  
+  .window {
+    background: #c0c0c0;
+    width: 100%;
+    max-width: 320px;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #404040, 2px 2px 0 rgba(0,0,0,0.3);
+  }
+  
+  .title-bar {
+    background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+    color: white;
+    padding: 3px 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 11px;
+    user-select: none;
+  }
+  
+  .title-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .title-icon {
+    width: 16px;
+    height: 16px;
+    background: #c0c0c0;
+    border: 1px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: #000;
+  }
+  
+  .controls {
+    display: flex;
+    gap: 2px;
+  }
+  
+  .ctrl-btn {
+    width: 16px;
+    height: 14px;
+    background: #c0c0c0;
+    border: 1px solid;
+    border-color: #ffffff #404040 #404040 #ffffff;
+    color: #000;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .ctrl-btn:active {
+    border-color: #404040 #ffffff #ffffff #404040;
+  }
+  
+  .menu-bar {
+    background: #c0c0c0;
+    padding: 2px 4px;
+    border-bottom: 1px solid #808080;
+    font-size: 11px;
+  }
+  
+  .menu-item {
+    padding: 2px 6px;
+    display: inline-block;
+    cursor: pointer;
+  }
+  
+  .menu-item:hover {
+    background: #000080;
+    color: white;
+  }
+  
+  .content {
+    padding: 8px;
+  }
+  
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #000;
+  }
+  
+  .date-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  
+  .date-display {
+    background: white;
+    border: 1px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 2px 6px;
+    font-size: 11px;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .nav-arrow {
+    background: #c0c0c0;
+    border: 1px solid;
+    border-color: #ffffff #404040 #404040 #ffffff;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-arrow:active {
+    border-color: #404040 #ffffff #ffffff #404040;
+  }
+  
+  .list-box {
+    background: white;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    min-height: 180px;
+    padding: 2px;
+    margin-bottom: 8px;
+    overflow-y: auto;
+    max-height: 280px;
+  }
+  
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px;
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .todo-item:hover { background: #ddeeff; }
+  .todo-item.selected { background: #000080; color: white; }
+  .todo-item.done .todo-text { text-decoration: line-through; opacity: 0.6; }
+  
+  .checkbox {
+    width: 12px;
+    height: 12px;
+    background: white;
+    border: 1px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000;
+    line-height: 1;
+  }
+  
+  .todo-text {
+    flex: 1;
+    word-break: break-all;
+  }
+  
+  .input-section {
+    background: #c0c0c0;
+    padding: 4px;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  
+  .input-field {
+    flex: 1;
+    background: white;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 3px 4px;
+    font-family: inherit;
+    font-size: 11px;
+    outline: none;
+    min-width: 0;
+  }
+  
+  .btn {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #404040 #404040 #ffffff;
+    padding: 3px 10px;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    box-shadow: inset 1px 1px 0 #dfdfdf;
+    white-space: nowrap;
+  }
+  
+  .btn:active {
+    border-color: #404040 #ffffff #ffffff #404040;
+    box-shadow: inset -1px -1px 0 #dfdfdf;
+  }
+  
+  .status-bar {
+    background: #c0c0c0;
+    border-top: 1px solid #ffffff;
+    padding: 2px 6px;
+    font-size: 11px;
+    color: #000;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .status-cell {
+    border: 1px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 1px 6px;
+  }
+</style>
+</head>
+<body>
+<div class="window">
+  <div class="title-bar">
+    <div class="title-text">
+      <span class="title-icon">📋</span>
+      <span>Task Manager</span>
+    </div>
+    <div class="controls">
+      <button class="ctrl-btn">_</button>
+      <button class="ctrl-btn">□</button>
+      <button class="ctrl-btn">×</button>
+    </div>
+  </div>
+  
+  <div class="menu-bar">
+    <span class="menu-item"><u>F</u>ile</span>
+    <span class="menu-item"><u>E</u>dit</span>
+    <span class="menu-item"><u>V</u>iew</span>
+    <span class="menu-item"><u>H</u>elp</span>
+  </div>
+  
+  <div class="content">
+    <div class="section-title">To-Do</div>
+    
+    <div class="date-row">
+      <button class="nav-arrow" id="prevBtn">◄</button>
+      <div class="date-display" id="dateDisplay">2026년 5월 20일 (수)</div>
+      <button class="nav-arrow" id="nextBtn">►</button>
+    </div>
+    
+    <div class="list-box" id="todoList"></div>
+    
+    <div class="input-section">
+      <input type="text" class="input-field" id="taskInput" placeholder="Add task..." maxlength="60">
+      <button class="btn" id="addBtn">Add</button>
+    </div>
+  </div>
+  
+  <div class="status-bar">
+    <span class="status-cell" id="statusLeft">Ready</span>
+    <span class="status-cell" id="statusRight">0 / 0</span>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'retro_todo_widget_v1';
+  let currentDate = new Date();
+  
+  function dateKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  
+  function loadAll() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch(e) { return {}; }
+  }
+  
+  function saveAll(data) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  }
+  
+  function getTodos() {
+    const all = loadAll();
+    return all[dateKey(currentDate)] || [];
+  }
+  
+  function setTodos(list) {
+    const all = loadAll();
+    all[dateKey(currentDate)] = list;
+    saveAll(all);
+  }
+  
+  function render() {
+    const days = ['일','월','화','수','목','금','토'];
+    document.getElementById('dateDisplay').textContent = 
+      currentDate.getFullYear() + '년 ' + (currentDate.getMonth()+1) + '월 ' + currentDate.getDate() + '일 (' + days[currentDate.getDay()] + ')';
+    
+    const todos = getTodos();
+    const list = document.getElementById('todoList');
+    list.innerHTML = '';
+    
+    todos.forEach((t, i) => {
+      const item = document.createElement('div');
+      item.className = 'todo-item' + (t.done ? ' done' : '');
+      item.innerHTML = `
+        <div class="checkbox">${t.done ? '✓' : ''}</div>
+        <span class="todo-text"></span>
+      `;
+      item.querySelector('.todo-text').textContent = t.text;
+      item.addEventListener('click', () => {
+        t.done = !t.done;
+        setTodos(todos);
+        render();
+      });
+      item.addEventListener('dblclick', () => {
+        if (confirm('Delete this task?')) {
+          todos.splice(i, 1);
+          setTodos(todos);
+          render();
+        }
+      });
+      list.appendChild(item);
+    });
+    
+    const done = todos.filter(t => t.done).length;
+    document.getElementById('statusRight').textContent = done + ' / ' + todos.length;
+    document.getElementById('statusLeft').textContent = todos.length === 0 ? 'Ready' : (todos.length - done) + ' pending';
+  }
+  
+  document.getElementById('addBtn').addEventListener('click', addTask);
+  document.getElementById('taskInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addTask();
+  });
+  
+  function addTask() {
+    const input = document.getElementById('taskInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const todos = getTodos();
+    todos.push({ text, done: false });
+    setTodos(todos);
+    input.value = '';
+    render();
+  }
+  
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    currentDate.setDate(currentDate.getDate() - 1);
+    render();
+  });
+  
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    currentDate.setDate(currentDate.getDate() + 1);
+    render();
+  });
+  
+  render();
+</script>
+</body>
+</html>
