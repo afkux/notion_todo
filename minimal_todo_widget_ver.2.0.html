@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>미니멀 Todo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Segoe UI', sans-serif;
+    background: transparent;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  
+  .widget {
+    background: #fafaf8;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 340px;
+    padding: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  
+  .header-icon {
+    color: #999;
+    font-size: 18px;
+  }
+  
+  .month-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  
+  .month-label {
+    font-size: 11px;
+    color: #999;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+  }
+  
+  .nav-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 8px;
+    transition: color 0.2s;
+  }
+  
+  .nav-btn:hover { color: #666; }
+  
+  .day-number {
+    text-align: center;
+    font-size: 42px;
+    font-weight: 300;
+    color: #333;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e8e6e0;
+    margin-bottom: 12px;
+  }
+  
+  .input-row input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: #333;
+    outline: none;
+    font-family: inherit;
+  }
+  
+  .input-row input::placeholder {
+    color: #bbb;
+  }
+  
+  .add-btn {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  
+  .add-btn:hover { color: #333; }
+  
+  .sort-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    justify-content: flex-end;
+  }
+  
+  .sort-btn {
+    background: none;
+    border: none;
+    color: #bbb;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  
+  .sort-btn:hover { color: #666; background: #f0eeea; }
+  .sort-btn.active { color: #333; background: #efeae0; font-weight: 600; }
+  
+  /* 4개까지 보이고 스크롤, 스크롤바 자동 숨김 */
+  .todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 192px;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s;
+  }
+  
+  /* 호버하거나 스크롤 중일 때만 스크롤바 표시 */
+  .todo-list:hover,
+  .todo-list:focus,
+  .todo-list.scrolling {
+    scrollbar-color: #d4d4d4 transparent;
+  }
+  
+  .todo-list::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .todo-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .todo-list::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  
+  .todo-list:hover::-webkit-scrollbar-thumb,
+  .todo-list.scrolling::-webkit-scrollbar-thumb {
+    background: #d4d4d4;
+  }
+  
+  .todo-list:hover::-webkit-scrollbar-thumb:hover,
+  .todo-list.scrolling::-webkit-scrollbar-thumb:hover {
+    background: #999;
+  }
+  
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #ececec;
+    font-size: 13px;
+    color: #444;
+    cursor: grab;
+    transition: border-color 0.2s, background 0.2s, color 0.2s, opacity 0.15s;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  
+  .todo-item:hover {
+    border-color: #d4d4d4;
+  }
+  
+  .todo-item:active {
+    cursor: grabbing;
+  }
+  
+  .todo-item.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+  
+  .todo-item.drag-over {
+    border-color: #999;
+    border-style: dashed;
+  }
+  
+  .todo-item.done {
+    background: #DBD0C3;
+    border-color: #DBD0C3;
+    color: #fff;
+  }
+  
+  .checkbox {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #d4d4d4;
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  
+  .todo-item.done .checkbox {
+    background: #fff;
+    border-color: #fff;
+  }
+  
+  .todo-item.done .checkbox::after {
+    content: '✓';
+    color: #DBD0C3;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  
+  .todo-text {
+    flex: 1;
+    word-break: break-all;
+  }
+  
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+  
+  .todo-item:hover .delete-btn { opacity: 1; }
+  .todo-item.done .delete-btn { color: rgba(255,255,255,0.5); }
+  
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8e6e0;
+    font-size: 11px;
+    color: #999;
+  }
+  
+  .today-btn {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+  
+  .today-btn:hover { color: #333; }
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="header">
+    <span class="header-icon">🤍</span>
+  </div>
+  
+  <div class="month-row">
+    <button class="nav-btn" id="prevBtn">‹</button>
+    <span class="month-label" id="monthLabel">FEB 2026</span>
+    <button class="nav-btn" id="nextBtn">›</button>
+  </div>
+  
+  <div class="day-number" id="dayNumber">04</div>
+  
+  <div class="input-row">
+    <input type="text" id="taskInput" placeholder="New task..." maxlength="60">
+    <button class="add-btn" id="addBtn">ADD</button>
+  </div>
+  
+  <div class="sort-row">
+    <button class="sort-btn active" data-sort="manual">기본</button>
+    <button class="sort-btn" data-sort="todo-first">남은 일 ↑</button>
+    <button class="sort-btn" data-sort="done-first">완료 ↑</button>
+  </div>
+  
+  <div class="todo-list" id="todoList"></div>
+  
+  <div class="footer">
+    <span id="counter">0 tasks left</span>
+    <button class="today-btn" id="todayBtn">Today</button>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'minimal_todo_widget_v1';
+  const SORT_KEY = 'minimal_todo_sort_v1';
+  let currentDate = new Date();
+  let sortMode = localStorage.getItem(SORT_KEY) || 'manual';
+  let draggedIndex = null;
+  
+  function dateKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  
+  function loadAll() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch(e) { return {}; }
+  }
+  
+  function saveAll(data) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  }
+  
+  function getTodos() {
+    const all = loadAll();
+    return all[dateKey(currentDate)] || [];
+  }
+  
+  function setTodos(list) {
+    const all = loadAll();
+    all[dateKey(currentDate)] = list;
+    saveAll(all);
+  }
+  
+  function sortTodos(todos) {
+    if (sortMode === 'manual') return todos.map((t, i) => ({ t, i }));
+    const indexed = todos.map((t, i) => ({ t, i }));
+    if (sortMode === 'todo-first') {
+      return indexed.sort((a, b) => {
+        if (a.t.done === b.t.done) return 0;
+        return a.t.done ? 1 : -1;
+      });
+    }
+    if (sortMode === 'done-first') {
+      return indexed.sort((a, b) => {
+        if (a.t.done === b.t.done) return 0;
+        return a.t.done ? -1 : 1;
+      });
+    }
+    return indexed;
+  }
+  
+  function render() {
+    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    document.getElementById('monthLabel').textContent = months[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
+    document.getElementById('dayNumber').textContent = String(currentDate.getDate()).padStart(2,'0');
+    
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.sort === sortMode);
+    });
+    
+    const todos = getTodos();
+    const sorted = sortTodos(todos);
+    const list = document.getElementById('todoList');
+    list.innerHTML = '';
+    
+    const canDrag = (sortMode === 'manual');
+    
+    sorted.forEach(({ t, i }) => {
+      const item = document.createElement('div');
+      item.className = 'todo-item' + (t.done ? ' done' : '');
+      item.draggable = canDrag;
+      item.dataset.index = i;
+      item.style.cursor = canDrag ? 'grab' : 'pointer';
+      item.innerHTML = `
+        <div class="checkbox"></div>
+        <span class="todo-text"></span>
+        <button class="delete-btn">×</button>
+      `;
+      item.querySelector('.todo-text').textContent = t.text;
+      
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-btn')) {
+          todos.splice(i, 1);
+          setTodos(todos);
+          render();
+        } else {
+          t.done = !t.done;
+          setTodos(todos);
+          render();
+        }
+      });
+      
+      if (canDrag) {
+        item.addEventListener('dragstart', (e) => {
+          draggedIndex = i;
+          item.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          try { e.dataTransfer.setData('text/plain', String(i)); } catch(_) {}
+        });
+        
+        item.addEventListener('dragend', () => {
+          item.classList.remove('dragging');
+          document.querySelectorAll('.todo-item').forEach(el => el.classList.remove('drag-over'));
+          draggedIndex = null;
+        });
+        
+        item.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (draggedIndex !== null && draggedIndex !== i) {
+            item.classList.add('drag-over');
+          }
+        });
+        
+        item.addEventListener('dragleave', () => {
+          item.classList.remove('drag-over');
+        });
+        
+        item.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (draggedIndex === null || draggedIndex === i) return;
+          const todos = getTodos();
+          const moved = todos.splice(draggedIndex, 1)[0];
+          todos.splice(i, 0, moved);
+          setTodos(todos);
+          draggedIndex = null;
+          render();
+        });
+      }
+      
+      list.appendChild(item);
+    });
+    
+    const left = todos.filter(t => !t.done).length;
+    document.getElementById('counter').textContent = left + ' task' + (left !== 1 ? 's' : '') + ' left';
+  }
+  
+  // 스크롤 중일 때 스크롤바 표시
+  let scrollTimer = null;
+  document.getElementById('todoList').addEventListener('scroll', function() {
+    this.classList.add('scrolling');
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+      this.classList.remove('scrolling');
+    }, 800);
+  });
+  
+  document.getElementById('addBtn').addEventListener('click', addTask);
+  document.getElementById('taskInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addTask();
+  });
+  
+  function addTask() {
+    const input = document.getElementById('taskInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const todos = getTodos();
+    todos.push({ text, done: false });
+    setTodos(todos);
+    input.value = '';
+    render();
+  }
+  
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    currentDate.setDate(currentDate.getDate() - 1);
+    render();
+  });
+  
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    currentDate.setDate(currentDate.getDate() + 1);
+    render();
+  });
+  
+  document.getElementById('todayBtn').addEventListener('click', () => {
+    currentDate = new Date();
+    render();
+  });
+  
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sortMode = btn.dataset.sort;
+      localStorage.setItem(SORT_KEY, sortMode);
+      render();
+    });
+  });
+  
+  render();
+</script>
+</body>
+</html>
