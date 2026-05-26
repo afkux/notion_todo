@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding D-day</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+    background: transparent;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  
+  .widget {
+    background: #ffffff;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 340px;
+    padding: 32px 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  
+  .icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  
+  .label {
+    font-size: 11px;
+    color: #A89B8A;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+  
+  .date-display {
+    text-align: center;
+    margin: 12px 0 24px;
+    font-size: 13px;
+    color: #6B5D4F;
+    font-weight: 500;
+  }
+  
+  .date-display .day {
+    color: #A89B8A;
+    margin-left: 4px;
+  }
+  
+  .countdown {
+    text-align: center;
+    margin: 8px 0;
+  }
+  
+  .months-text {
+    font-size: 13px;
+    color: #A89B8A;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  
+  .d-label {
+    font-size: 14px;
+    color: #DBD0C3;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+  
+  .d-number {
+    font-size: 72px;
+    font-weight: 700;
+    color: #6B5D4F;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin: 6px 0 8px;
+  }
+  
+  .d-unit {
+    font-size: 13px;
+    color: #A89B8A;
+    font-weight: 500;
+  }
+  
+  .stage-text {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 12px;
+    color: #C4B8A8;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  
+  .footer-row {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 0.5px solid #efeae0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  
+  .date-input-label {
+    font-size: 11px;
+    color: #A89B8A;
+    font-weight: 500;
+  }
+  
+  .date-input {
+    background: #faf8f5;
+    border: 1px solid #efeae0;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+    color: #6B5D4F;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  
+  .date-input:hover, .date-input:focus {
+    border-color: #DBD0C3;
+  }
+  
+  .passed-msg {
+    color: #DBD0C3;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="header">
+    <div class="icon">💍</div>
+    <div class="label">Our Wedding Day</div>
+  </div>
+  
+  <div class="date-display" id="dateDisplay">2027년 12월 15일<span class="day">(수)</span></div>
+  
+  <div class="countdown">
+    <div class="months-text" id="monthsText">19개월 남았어요</div>
+    <div class="d-label" id="dLabel">D-</div>
+    <div class="d-number" id="dNumber">000</div>
+    <div class="d-unit" id="dUnit">days to go</div>
+  </div>
+  
+  <div class="stage-text" id="stageText">여유 있는 시기</div>
+  
+  <div class="footer-row">
+    <span class="date-input-label">예식일</span>
+    <input type="date" class="date-input" id="dateInput" value="2027-12-15">
+  </div>
+</div>
+
+<script>
+  const DATE_KEY = 'wedding_dday_v1';
+  
+  function loadDate() {
+    return localStorage.getItem(DATE_KEY) || '2027-12-15';
+  }
+  
+  function saveDate(d) {
+    try { localStorage.setItem(DATE_KEY, d); } catch(e) {}
+  }
+  
+  function formatKorean(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일';
+  }
+  
+  function getDayName(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const days = ['일','월','화','수','목','금','토'];
+    return '(' + days[d.getDay()] + ')';
+  }
+  
+  function daysBetween(d1, d2) {
+    const t1 = new Date(d1 + 'T00:00:00').getTime();
+    const t2 = new Date(d2 + 'T00:00:00').getTime();
+    return Math.round((t2 - t1) / (1000 * 60 * 60 * 24));
+  }
+  
+  function getMonthsText(daysLeft) {
+    if (daysLeft < 0) {
+      const m = Math.abs(daysLeft);
+      if (m < 30) return m + '일 지났어요';
+      const months = Math.floor(m / 30);
+      return months + '개월 지났어요';
+    }
+    if (daysLeft === 0) return '오늘이에요';
+    if (daysLeft < 7) return daysLeft + '일 남았어요';
+    if (daysLeft < 30) {
+      const weeks = Math.floor(daysLeft / 7);
+      return weeks + '주 남았어요';
+    }
+    const months = Math.floor(daysLeft / 30);
+    const remainDays = daysLeft - (months * 30);
+    if (months < 12) {
+      if (remainDays < 7) return months + '개월 남았어요';
+      return months + '개월 남았어요';
+    }
+    const years = Math.floor(months / 12);
+    const remainMonths = months - (years * 12);
+    if (remainMonths === 0) return years + '년 남았어요';
+    return years + '년 ' + remainMonths + '개월 남았어요';
+  }
+  
+  function getStageText(daysLeft) {
+    if (daysLeft < 0) return '결혼 ' + Math.abs(daysLeft) + '일 차';
+    if (daysLeft === 0) return '🎉 오늘이에요';
+    if (daysLeft <= 7) return '마지막 한 주';
+    if (daysLeft <= 30) return '마지막 한 달';
+    if (daysLeft <= 90) return '막바지 준비';
+    if (daysLeft <= 180) return '본격 준비';
+    if (daysLeft <= 365) return '준비 초반';
+    if (daysLeft <= 547) return '천천히 시작';
+    return '여유 있는 시기';
+  }
+  
+  function render() {
+    const targetDate = loadDate();
+    const today = new Date().toISOString().slice(0, 10);
+    
+    document.getElementById('dateInput').value = targetDate;
+    document.getElementById('dateDisplay').innerHTML = 
+      formatKorean(targetDate) + '<span class="day">' + getDayName(targetDate) + '</span>';
+    
+    const daysLeft = daysBetween(today, targetDate);
+    const dLabel = document.getElementById('dLabel');
+    const monthsTextEl = document.getElementById('monthsText');
+    
+    monthsTextEl.textContent = getMonthsText(daysLeft);
+    
+    if (daysLeft > 0) {
+      dLabel.textContent = 'D-';
+      document.getElementById('dNumber').textContent = daysLeft;
+      document.getElementById('dUnit').textContent = 'days to go';
+      dLabel.classList.remove('passed-msg');
+    } else if (daysLeft === 0) {
+      dLabel.textContent = 'D-day';
+      document.getElementById('dNumber').textContent = '🎉';
+      document.getElementById('dUnit').textContent = 'TODAY!';
+      dLabel.classList.add('passed-msg');
+    } else {
+      dLabel.textContent = 'D+';
+      document.getElementById('dNumber').textContent = Math.abs(daysLeft);
+      document.getElementById('dUnit').textContent = 'days passed';
+      dLabel.classList.add('passed-msg');
+    }
+    
+    document.getElementById('stageText').textContent = getStageText(daysLeft);
+  }
+  
+  document.getElementById('dateInput').addEventListener('change', (e) => {
+    saveDate(e.target.value);
+    render();
+  });
+  
+  render();
+  setInterval(render, 60000);
+</script>
+</body>
+</html>
